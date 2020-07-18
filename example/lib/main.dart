@@ -9,7 +9,7 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:ext_video_player/video_player.dart';
+import 'package:ext_video_player/ext_video_player.dart';
 
 void main() {
   runApp(
