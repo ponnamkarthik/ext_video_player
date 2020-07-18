@@ -1,4 +1,6 @@
-# Clone of [video_player](https://pub.dartlang.org/packages/video_player) plugin with support for Youtube & RTMP
+# ext_video_player
+
+### Clone of [video_player](https://pub.dartlang.org/packages/video_player) plugin with support for Youtube & RTMP
 
 [![pub package](https://img.shields.io/pub/v/ext_video_player.svg)](https://pub.dartlang.org/packages/ext_video_player)
 
