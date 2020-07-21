@@ -1,4 +1,8 @@
-## 0.0.2
+## 0.0.2+2
+
+* Fix youtube short urls
+
+## 0.0.2+1
 
 * Web - youtube video fix
 

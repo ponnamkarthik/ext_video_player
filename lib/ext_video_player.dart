@@ -250,12 +250,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     VideoYoutubeQuality quality = VideoYoutubeQuality.medium;
 
     String finalYoutubeUrl = dataSource;
-    if (dataSource.indexOf("youtube.com") != -1) {
+    if (_getIdFromUrl(dataSource) != null) {
       try {
         Map<String, String> videoUrls = Map();
         String _videoId = _getIdFromUrl(dataSource);
         String _fetchUrl = "";
-        print(kIsWeb);
         if (kIsWeb) {
           _fetchUrl = "https://youtubevideodownloadurls.netlify.app/.netlify/functions/server?vid=$_videoId";
         } else {
@@ -284,9 +283,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           }
         }
         if (newUrl != null) finalYoutubeUrl = newUrl;
-      } catch (err) {
-        print(err);
-      }
+      } catch (err) {}
     }
 
     DataSource dataSourceDescription;
