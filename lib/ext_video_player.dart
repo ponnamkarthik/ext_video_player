@@ -254,7 +254,15 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       try {
         Map<String, String> videoUrls = Map();
         String _videoId = _getIdFromUrl(dataSource);
-        var response = await http.get("https://www.youtube.com/get_video_info?&video_id=$_videoId");
+        String _fetchUrl = "";
+        print(kIsWeb);
+        if (kIsWeb) {
+          _fetchUrl = "https://youtubevideodownloadurls.netlify.app/.netlify/functions/server?vid=$_videoId";
+        } else {
+          _fetchUrl = "https://www.youtube.com/get_video_info?&video_id=$_videoId";
+        }
+        var response = await http.get(_fetchUrl);
+
         Uri uri = Uri.parse('http://google.com?' + response.body);
         var jsonRes = jsonDecode(uri.queryParameters['player_response']);
         var formats = jsonRes['streamingData']['adaptiveFormats'];
@@ -276,7 +284,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           }
         }
         if (newUrl != null) finalYoutubeUrl = newUrl;
-      } catch (err) {}
+      } catch (err) {
+        print(err);
+      }
     }
 
     DataSource dataSourceDescription;

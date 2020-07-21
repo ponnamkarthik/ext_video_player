@@ -1,3 +1,7 @@
+## 0.0.2
+
+* Web - youtube video fix
+
 ## 0.0.1
 
 * Initial release

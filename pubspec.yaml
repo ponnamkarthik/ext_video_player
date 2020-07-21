@@ -1,7 +1,7 @@
 name: ext_video_player
 description: Flutter plugin for displaying inline  with other Flutter
   widgets on Android and iOS. This plugin also supports playing youtube videos & RTMP Streams
-version: 0.0.1
+version: 0.0.2
 homepage: https://github.com/ponnamkarthik/ext_video_player
 
 flutter:
@@ -17,7 +17,7 @@ flutter:
 
 dependencies:
   meta: "^1.0.5"
-  video_player_platform_interface: ^2.0.0
+  video_player_platform_interface: ^2.0.2
   # The design on https://flutter.dev/go/federated-plugins was to leave
   # this constraint as "any". We cannot do it right now as it fails pub publish
   # validation, so we set a ^ constraint.

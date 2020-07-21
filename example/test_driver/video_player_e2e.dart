@@ -5,7 +5,7 @@
 import 'dart:io';
 import 'package:e2e/e2e.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ext_video_player/video_player.dart';
+import 'package:ext_video_player/ext_video_player.dart';
 
 const Duration _playDuration = Duration(seconds: 1);
 
