@@ -313,7 +313,10 @@ class _YoutubeVideoState extends State<_YoutubeVideo> {
                   VideoPlayer(_controller),
                   ClosedCaption(text: _controller.value.caption.text),
                   _PlayPauseOverlay(controller: _controller),
-                  VideoProgressIndicator(_controller, allowScrubbing: true),
+                  VideoProgressIndicator(
+                    _controller,
+                    allowScrubbing: true,
+                  ),
                 ],
               ),
             ),

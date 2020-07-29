@@ -1,3 +1,8 @@
+## 0.0.3
+
+* Youtube video no sound fixed
+* Added Bubble indicator for progress
+
 ## 0.0.2+2
 
 * Fix youtube short urls

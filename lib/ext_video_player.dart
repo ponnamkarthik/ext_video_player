@@ -264,7 +264,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
 
         Uri uri = Uri.parse('http://google.com?' + response.body);
         var jsonRes = jsonDecode(uri.queryParameters['player_response']);
-        var formats = jsonRes['streamingData']['adaptiveFormats'];
+        var formats = jsonRes['streamingData']['formats'];
         formats.forEach((format) {
           if (videoUrls[format['quality']] == null) {
             videoUrls[format['quality']] = format['url'];
@@ -820,7 +820,7 @@ class _VideoProgressIndicatorState extends State<VideoProgressIndicator> {
             valueColor: AlwaysStoppedAnimation<Color>(colors.bufferedColor),
             backgroundColor: colors.backgroundColor,
           ),
-          LinearProgressIndicator(
+          CustomLinearProgressIndicator(
             value: position / duration,
             valueColor: AlwaysStoppedAnimation<Color>(colors.playedColor),
             backgroundColor: Colors.transparent,
@@ -912,5 +912,212 @@ class ClosedCaption extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+const int _kIndeterminateLinearDuration = 1800;
+
+class CustomLinearProgressIndicator extends ProgressIndicator {
+  /// Creates a linear progress indicator.
+  ///
+  /// {@macro flutter.material.progressIndicator.parameters}
+  const CustomLinearProgressIndicator({
+    Key key,
+    double value,
+    Color backgroundColor,
+    this.bubbleRadius = 4.0,
+    Animation<Color> valueColor,
+    this.minHeight,
+    String semanticsLabel,
+    String semanticsValue,
+  })  : assert(minHeight == null || minHeight > 0),
+        super(
+          key: key,
+          value: value,
+          backgroundColor: backgroundColor,
+          valueColor: valueColor,
+          semanticsLabel: semanticsLabel,
+          semanticsValue: semanticsValue,
+        );
+
+  /// The minimum height of the line used to draw the indicator.
+  ///
+  /// This defaults to 4dp.
+  final double minHeight;
+  final double bubbleRadius;
+
+  @override
+  _CustomLinearProgressIndicatorState createState() => _CustomLinearProgressIndicatorState();
+}
+
+class _CustomLinearProgressIndicatorState extends State<CustomLinearProgressIndicator> with SingleTickerProviderStateMixin {
+  AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: _kIndeterminateLinearDuration),
+      vsync: this,
+    );
+    if (widget.value == null) _controller.repeat();
+  }
+
+  @override
+  void didUpdateWidget(CustomLinearProgressIndicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value == null && !_controller.isAnimating)
+      _controller.repeat();
+    else if (widget.value != null && _controller.isAnimating) _controller.stop();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Widget _buildIndicator(BuildContext context, double animationValue, TextDirection textDirection) {
+    return Container(
+      constraints: BoxConstraints(
+        minWidth: double.infinity,
+        minHeight: widget.minHeight ?? 4.0,
+      ),
+      child: CustomPaint(
+        painter: _LinearProgressIndicatorPainter(
+          backgroundColor: widget.backgroundColor ?? Theme.of(context).backgroundColor,
+          valueColor: widget.valueColor?.value ?? Theme.of(context).accentColor,
+          value: widget.value, // may be null
+          animationValue: animationValue, // ignored if widget.value is not null
+          textDirection: textDirection,
+          bubbleRadius: widget.bubbleRadius,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final TextDirection textDirection = Directionality.of(context);
+
+    if (widget.value != null) return _buildIndicator(context, _controller.value, textDirection);
+
+    return AnimatedBuilder(
+      animation: _controller.view,
+      builder: (BuildContext context, Widget child) {
+        return _buildIndicator(context, _controller.value, textDirection);
+      },
+    );
+  }
+}
+
+class _LinearProgressIndicatorPainter extends CustomPainter {
+  const _LinearProgressIndicatorPainter({
+    this.backgroundColor,
+    this.valueColor,
+    this.value,
+    this.bubbleRadius,
+    this.animationValue,
+    @required this.textDirection,
+  }) : assert(textDirection != null);
+
+  final Color backgroundColor;
+  final Color valueColor;
+  final double value;
+  final double bubbleRadius;
+  final double animationValue;
+  final TextDirection textDirection;
+
+  // The indeterminate progress animation displays two lines whose leading (head)
+  // and trailing (tail) endpoints are defined by the following four curves.
+  static const Curve line1Head = Interval(
+    0.0,
+    750.0 / _kIndeterminateLinearDuration,
+    curve: Cubic(0.2, 0.0, 0.8, 1.0),
+  );
+  static const Curve line1Tail = Interval(
+    333.0 / _kIndeterminateLinearDuration,
+    (333.0 + 750.0) / _kIndeterminateLinearDuration,
+    curve: Cubic(0.4, 0.0, 1.0, 1.0),
+  );
+  static const Curve line2Head = Interval(
+    1000.0 / _kIndeterminateLinearDuration,
+    (1000.0 + 567.0) / _kIndeterminateLinearDuration,
+    curve: Cubic(0.0, 0.0, 0.65, 1.0),
+  );
+  static const Curve line2Tail = Interval(
+    1267.0 / _kIndeterminateLinearDuration,
+    (1267.0 + 533.0) / _kIndeterminateLinearDuration,
+    curve: Cubic(0.10, 0.0, 0.45, 1.0),
+  );
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = backgroundColor
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(Offset.zero & size, paint);
+
+    final indicatorPaint = Paint()
+      ..color = backgroundColor
+      ..strokeWidth = 5.0
+      ..style = PaintingStyle.fill;
+
+    paint.color = valueColor;
+    indicatorPaint.color = valueColor;
+
+    void drawBar(double x, double width) {
+      if (width <= 0.0) return;
+
+      double left;
+      switch (textDirection) {
+        case TextDirection.rtl:
+          left = size.width - width - x;
+          break;
+        case TextDirection.ltr:
+          left = x;
+          break;
+      }
+      canvas.drawRect(Offset(left, 0.0) & Size(width, size.height), paint);
+    }
+
+    void drawIndicator(double x, double width) {
+      if (width <= 0.0) return;
+
+      double left;
+      switch (textDirection) {
+        case TextDirection.rtl:
+          left = size.width - width - x;
+          break;
+        case TextDirection.ltr:
+          left = x;
+          break;
+      }
+      canvas.drawCircle(Offset(width, 1.5), bubbleRadius, paint);
+    }
+
+    if (value != null) {
+      drawBar(0.0, value.clamp(0.0, 1.0) * size.width as double);
+      drawIndicator(0.0, value.clamp(0.0, 1.0) * size.width as double);
+    } else {
+      final double x1 = size.width * line1Tail.transform(animationValue);
+      final double width1 = size.width * line1Head.transform(animationValue) - x1;
+
+      final double x2 = size.width * line2Tail.transform(animationValue);
+      final double width2 = size.width * line2Head.transform(animationValue) - x2;
+
+      drawBar(x1, width1);
+      drawIndicator(x1, width1);
+      drawBar(x2, width2);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_LinearProgressIndicatorPainter oldPainter) {
+    return oldPainter.backgroundColor != backgroundColor ||
+        oldPainter.valueColor != valueColor ||
+        oldPainter.value != value ||
+        oldPainter.animationValue != animationValue ||
+        oldPainter.textDirection != textDirection;
   }
 }
