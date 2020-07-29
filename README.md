@@ -1,4 +1,4 @@
-# ext_video_player
+# [ext_video_player](https://pub.dartlang.org/packages/ext_video_player)
 
 ### Clone of [video_player](https://pub.dartlang.org/packages/video_player) plugin with support for Youtube & RTMP
 
