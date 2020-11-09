@@ -11,7 +11,7 @@ flutter:
         package: ext.videoplayer
         pluginClass: VideoPlayerPlugin
       ios:
-        pluginClass: FLTVideoPlayerPlugin
+        pluginClass: FLTExtVideoPlayerPlugin
       web:
         default_package: video_player_web
 

@@ -10,8 +10,8 @@
 @import e2e;
 #endif
 
-#if __has_include(<ext_video_player/FLTVideoPlayerPlugin.h>)
-#import <ext_video_player/FLTVideoPlayerPlugin.h>
+#if __has_include(<ext_video_player/FLTExtVideoPlayerPlugin.h>)
+#import <ext_video_player/FLTExtVideoPlayerPlugin.h>
 #else
 @import ext_video_player;
 #endif
@@ -20,7 +20,7 @@
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [E2EPlugin registerWithRegistrar:[registry registrarForPlugin:@"E2EPlugin"]];
-  [FLTVideoPlayerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTVideoPlayerPlugin"]];
+  [FLTExtVideoPlayerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTExtVideoPlayerPlugin"]];
 }
 
 @end
