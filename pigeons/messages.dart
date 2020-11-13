@@ -44,6 +44,7 @@ void configurePigeon(PigeonOptions opts) {
   opts.objcHeaderOut = 'ios/Classes/messages.h';
   opts.objcSourceOut = 'ios/Classes/messages.m';
   opts.objcOptions.prefix = 'FLT';
-  opts.javaOut = 'android/src/main/java/io/flutter/plugins/videoplayer/Messages.java';
-  opts.javaOptions.package = 'io.flutter.plugins.videoplayer';
+  opts.javaOut =
+      'android/src/main/java/io/flutter/plugins/videoplayer/Messages.java';
+  opts.javaOptions.package = 'ext.videoplayer';
 }

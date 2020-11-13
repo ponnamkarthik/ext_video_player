@@ -17,13 +17,14 @@ flutter:
 
 dependencies:
   meta: "^1.0.5"
-  video_player_platform_interface: ^2.0.2
+  video_player_platform_interface: ^2.2.0
+
   # The design on https://flutter.dev/go/federated-plugins was to leave
   # this constraint as "any". We cannot do it right now as it fails pub publish
   # validation, so we set a ^ constraint.
   # TODO(amirh): Revisit this (either update this part in the  design or the pub tool).
   # https://github.com/flutter/flutter/issues/46264
-  video_player_web: '>=0.1.1 <2.0.0'
+  video_player_web: '>=0.1.4 <2.0.0'
   
   flutter:
     sdk: flutter
@@ -34,8 +35,8 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   pedantic: ^1.8.0
-  pigeon: 0.1.0-experimental.11
+  pigeon: 0.1.7
 
 environment:
-  sdk: ">=2.6.0 <3.0.0"
+  sdk: ">=2.8.0 <3.0.0"
   flutter: ">=1.12.13+hotfix.5 <2.0.0"

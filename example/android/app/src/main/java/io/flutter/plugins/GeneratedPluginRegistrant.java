@@ -13,7 +13,7 @@ import io.flutter.embedding.engine.FlutterEngine;
 @Keep
 public final class GeneratedPluginRegistrant {
   public static void registerWith(@NonNull FlutterEngine flutterEngine) {
-    flutterEngine.getPlugins().add(new dev.flutter.plugins.e2e.E2EPlugin());
     flutterEngine.getPlugins().add(new ext.videoplayer.VideoPlayerPlugin());
+    flutterEngine.getPlugins().add(new dev.flutter.plugins.e2e.E2EPlugin());
   }
 }

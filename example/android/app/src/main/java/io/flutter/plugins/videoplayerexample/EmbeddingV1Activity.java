@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package io.flutter.plugins.videoplayerexample;
+package ext.videoplayerexample;
 
 import android.os.Bundle;
 import dev.flutter.plugins.e2e.E2EPlugin;
@@ -15,6 +15,6 @@ public class EmbeddingV1Activity extends FlutterActivity {
     super.onCreate(savedInstanceState);
     E2EPlugin.registerWith(registrarFor("dev.flutter.plugins.e2e.E2EPlugin"));
     VideoPlayerPlugin.registerWith(
-        registrarFor("io.flutter.plugins.videoplayer.VideoPlayerPlugin"));
+        registrarFor("ext.videoplayer.VideoPlayerPlugin"));
   }
 }

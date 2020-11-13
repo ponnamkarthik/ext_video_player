@@ -8,12 +8,13 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
-
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
-export 'package:video_player_platform_interface/video_player_platform_interface.dart' show DurationRange, DataSourceType, VideoFormat;
+
+export 'package:video_player_platform_interface/video_player_platform_interface.dart'
+    show DurationRange, DataSourceType, VideoFormat, VideoPlayerOptions;
 
 import 'src/closed_caption_file.dart';
 export 'src/closed_caption_file.dart';
@@ -48,6 +49,7 @@ class VideoPlayerValue {
     this.isLooping = false,
     this.isBuffering = false,
     this.volume = 1.0,
+    this.playbackSpeed = 1.0,
     this.errorDescription,
   });
 
@@ -56,7 +58,8 @@ class VideoPlayerValue {
 
   /// Returns an instance with a `null` [Duration] and the given
   /// [errorDescription].
-  VideoPlayerValue.erroneous(String errorDescription) : this(duration: null, errorDescription: errorDescription);
+  VideoPlayerValue.erroneous(String errorDescription)
+      : this(duration: null, errorDescription: errorDescription);
 
   /// The total duration of the video.
   ///
@@ -86,6 +89,9 @@ class VideoPlayerValue {
 
   /// The current volume of the playback.
   final double volume;
+
+  /// The current speed of the playback.
+  final double playbackSpeed;
 
   /// A description of the error if present.
   ///
@@ -129,6 +135,7 @@ class VideoPlayerValue {
     bool isLooping,
     bool isBuffering,
     double volume,
+    double playbackSpeed,
     String errorDescription,
   }) {
     return VideoPlayerValue(
@@ -141,6 +148,7 @@ class VideoPlayerValue {
       isLooping: isLooping ?? this.isLooping,
       isBuffering: isBuffering ?? this.isBuffering,
       volume: volume ?? this.volume,
+      playbackSpeed: playbackSpeed ?? this.playbackSpeed,
       errorDescription: errorDescription ?? this.errorDescription,
     );
   }
@@ -155,8 +163,9 @@ class VideoPlayerValue {
         'buffered: [${buffered.join(', ')}], '
         'isPlaying: $isPlaying, '
         'isLooping: $isLooping, '
-        'isBuffering: $isBuffering'
+        'isBuffering: $isBuffering, '
         'volume: $volume, '
+        'playbackSpeed: $playbackSpeed, '
         'errorDescription: $errorDescription)';
   }
 }
@@ -177,7 +186,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// The name of the asset is given by the [dataSource] argument and must not be
   /// null. The [package] argument must be non-null when the asset comes from a
   /// package and null otherwise.
-  VideoPlayerController.asset(this.dataSource, {this.package, this.closedCaptionFile})
+  VideoPlayerController.asset(this.dataSource,
+      {this.package, this.closedCaptionFile, this.videoPlayerOptions})
       : dataSourceType = DataSourceType.asset,
         formatHint = null,
         super(VideoPlayerValue(duration: null));
@@ -189,7 +199,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// null.
   /// **Android only**: The [formatHint] option allows the caller to override
   /// the video format detection code.
-  VideoPlayerController.network(this.dataSource, {this.formatHint, this.closedCaptionFile})
+  VideoPlayerController.network(this.dataSource,
+      {this.formatHint, this.closedCaptionFile, this.videoPlayerOptions})
       : dataSourceType = DataSourceType.network,
         package = null,
         super(VideoPlayerValue(duration: null));
@@ -198,7 +209,8 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   ///
   /// This will load the file from the file-URI given by:
   /// `'file://${file.path}'`.
-  VideoPlayerController.file(File file, {this.closedCaptionFile})
+  VideoPlayerController.file(File file,
+      {this.closedCaptionFile, this.videoPlayerOptions})
       : dataSource = 'file://${file.path}',
         dataSourceType = DataSourceType.file,
         package = null,
@@ -218,6 +230,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// Describes the type of data source this [VideoPlayerController]
   /// is constructed with.
   final DataSourceType dataSourceType;
+
+  /// Provide additional configuration options (optional). Like setting the audio mode to mix
+  final VideoPlayerOptions videoPlayerOptions;
 
   /// Only set for [asset] videos. The package that the asset was loaded from.
   final String package;
@@ -309,6 +324,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         );
         break;
     }
+
+    if (videoPlayerOptions?.mixWithOthers != null) {
+      await _videoPlayerPlatform
+          .setMixWithOthers(videoPlayerOptions.mixWithOthers);
+    }
+
     _textureId = await _videoPlayerPlatform.create(dataSourceDescription);
     _creatingCompleter.complete(null);
     final Completer<void> initializingCompleter = Completer<void>();
@@ -363,7 +384,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       }
     }
 
-    _eventSubscription = _videoPlayerPlatform.videoEventsFor(_textureId).listen(eventListener, onError: errorListener);
+    _eventSubscription = _videoPlayerPlatform
+        .videoEventsFor(_textureId)
+        .listen(eventListener, onError: errorListener);
     return initializingCompleter.future;
   }
 
@@ -445,6 +468,9 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     }
     if (value.isPlaying) {
       await _videoPlayerPlatform.play(_textureId);
+
+      // Cancel previous timer.
+      _timer?.cancel();
       _timer = Timer.periodic(
         const Duration(milliseconds: 500),
         (Timer timer) async {
@@ -458,6 +484,11 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
           _updatePosition(newPosition);
         },
       );
+
+      // This ensures that the correct playback speed is always applied when
+      // playing back. This is necessary because we do not set playback speed
+      // when paused.
+      await _applyPlaybackSpeed();
     } else {
       _timer?.cancel();
       await _videoPlayerPlatform.pause(_textureId);
@@ -469,6 +500,22 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
       return;
     }
     await _videoPlayerPlatform.setVolume(_textureId, value.volume);
+  }
+
+  Future<void> _applyPlaybackSpeed() async {
+    if (!value.initialized || _isDisposed) {
+      return;
+    }
+
+    // Setting the playback speed on iOS will trigger the video to play. We
+    // prevent this from happening by not applying the playback speed until
+    // the video is manually played from Flutter.
+    if (!value.isPlaying) return;
+
+    await _videoPlayerPlatform.setPlaybackSpeed(
+      _textureId,
+      value.playbackSpeed,
+    );
   }
 
   /// The position in the current video.
@@ -504,6 +551,40 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   Future<void> setVolume(double volume) async {
     value = value.copyWith(volume: volume.clamp(0.0, 1.0));
     await _applyVolume();
+  }
+
+  /// Sets the playback speed of [this].
+  ///
+  /// [speed] indicates a speed value with different platforms accepting
+  /// different ranges for speed values. The [speed] must be greater than 0.
+  ///
+  /// The values will be handled as follows:
+  /// * On web, the audio will be muted at some speed when the browser
+  ///   determines that the sound would not be useful anymore. For example,
+  ///   "Gecko mutes the sound outside the range `0.25` to `5.0`" (see https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/playbackRate).
+  /// * On Android, some very extreme speeds will not be played back accurately.
+  ///   Instead, your video will still be played back, but the speed will be
+  ///   clamped by ExoPlayer (but the values are allowed by the player, like on
+  ///   web).
+  /// * On iOS, you can sometimes not go above `2.0` playback speed on a video.
+  ///   An error will be thrown for if the option is unsupported. It is also
+  ///   possible that your specific video cannot be slowed down, in which case
+  ///   the plugin also reports errors.
+  Future<void> setPlaybackSpeed(double speed) async {
+    if (speed < 0) {
+      throw ArgumentError.value(
+        speed,
+        'Negative playback speeds are generally unsupported.',
+      );
+    } else if (speed == 0) {
+      throw ArgumentError.value(
+        speed,
+        'Zero playback speed is generally unsupported. Consider using [pause].',
+      );
+    }
+
+    value = value.copyWith(playbackSpeed: speed);
+    await _applyPlaybackSpeed();
   }
 
   /// The closed caption based on the current [position] in the video.
@@ -618,7 +699,9 @@ class _VideoPlayerState extends State<VideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return _textureId == null ? Container() : _videoPlayerPlatform.buildView(_textureId);
+    return _textureId == null
+        ? Container()
+        : _videoPlayerPlatform.buildView(_textureId);
   }
 }
 
@@ -820,7 +903,7 @@ class _VideoProgressIndicatorState extends State<VideoProgressIndicator> {
             valueColor: AlwaysStoppedAnimation<Color>(colors.bufferedColor),
             backgroundColor: colors.backgroundColor,
           ),
-          CustomLinearProgressIndicator(
+          LinearProgressIndicator(
             value: position / duration,
             valueColor: AlwaysStoppedAnimation<Color>(colors.playedColor),
             backgroundColor: Colors.transparent,
@@ -912,212 +995,5 @@ class ClosedCaption extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-const int _kIndeterminateLinearDuration = 1800;
-
-class CustomLinearProgressIndicator extends ProgressIndicator {
-  /// Creates a linear progress indicator.
-  ///
-  /// {@macro flutter.material.progressIndicator.parameters}
-  const CustomLinearProgressIndicator({
-    Key key,
-    double value,
-    Color backgroundColor,
-    this.bubbleRadius = 4.0,
-    Animation<Color> valueColor,
-    this.minHeight,
-    String semanticsLabel,
-    String semanticsValue,
-  })  : assert(minHeight == null || minHeight > 0),
-        super(
-          key: key,
-          value: value,
-          backgroundColor: backgroundColor,
-          valueColor: valueColor,
-          semanticsLabel: semanticsLabel,
-          semanticsValue: semanticsValue,
-        );
-
-  /// The minimum height of the line used to draw the indicator.
-  ///
-  /// This defaults to 4dp.
-  final double minHeight;
-  final double bubbleRadius;
-
-  @override
-  _CustomLinearProgressIndicatorState createState() => _CustomLinearProgressIndicatorState();
-}
-
-class _CustomLinearProgressIndicatorState extends State<CustomLinearProgressIndicator> with SingleTickerProviderStateMixin {
-  AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: _kIndeterminateLinearDuration),
-      vsync: this,
-    );
-    if (widget.value == null) _controller.repeat();
-  }
-
-  @override
-  void didUpdateWidget(CustomLinearProgressIndicator oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.value == null && !_controller.isAnimating)
-      _controller.repeat();
-    else if (widget.value != null && _controller.isAnimating) _controller.stop();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  Widget _buildIndicator(BuildContext context, double animationValue, TextDirection textDirection) {
-    return Container(
-      constraints: BoxConstraints(
-        minWidth: double.infinity,
-        minHeight: widget.minHeight ?? 4.0,
-      ),
-      child: CustomPaint(
-        painter: _LinearProgressIndicatorPainter(
-          backgroundColor: widget.backgroundColor ?? Theme.of(context).backgroundColor,
-          valueColor: widget.valueColor?.value ?? Theme.of(context).accentColor,
-          value: widget.value, // may be null
-          animationValue: animationValue, // ignored if widget.value is not null
-          textDirection: textDirection,
-          bubbleRadius: widget.bubbleRadius,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final TextDirection textDirection = Directionality.of(context);
-
-    if (widget.value != null) return _buildIndicator(context, _controller.value, textDirection);
-
-    return AnimatedBuilder(
-      animation: _controller.view,
-      builder: (BuildContext context, Widget child) {
-        return _buildIndicator(context, _controller.value, textDirection);
-      },
-    );
-  }
-}
-
-class _LinearProgressIndicatorPainter extends CustomPainter {
-  const _LinearProgressIndicatorPainter({
-    this.backgroundColor,
-    this.valueColor,
-    this.value,
-    this.bubbleRadius,
-    this.animationValue,
-    @required this.textDirection,
-  }) : assert(textDirection != null);
-
-  final Color backgroundColor;
-  final Color valueColor;
-  final double value;
-  final double bubbleRadius;
-  final double animationValue;
-  final TextDirection textDirection;
-
-  // The indeterminate progress animation displays two lines whose leading (head)
-  // and trailing (tail) endpoints are defined by the following four curves.
-  static const Curve line1Head = Interval(
-    0.0,
-    750.0 / _kIndeterminateLinearDuration,
-    curve: Cubic(0.2, 0.0, 0.8, 1.0),
-  );
-  static const Curve line1Tail = Interval(
-    333.0 / _kIndeterminateLinearDuration,
-    (333.0 + 750.0) / _kIndeterminateLinearDuration,
-    curve: Cubic(0.4, 0.0, 1.0, 1.0),
-  );
-  static const Curve line2Head = Interval(
-    1000.0 / _kIndeterminateLinearDuration,
-    (1000.0 + 567.0) / _kIndeterminateLinearDuration,
-    curve: Cubic(0.0, 0.0, 0.65, 1.0),
-  );
-  static const Curve line2Tail = Interval(
-    1267.0 / _kIndeterminateLinearDuration,
-    (1267.0 + 533.0) / _kIndeterminateLinearDuration,
-    curve: Cubic(0.10, 0.0, 0.45, 1.0),
-  );
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = backgroundColor
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Offset.zero & size, paint);
-
-    final indicatorPaint = Paint()
-      ..color = backgroundColor
-      ..strokeWidth = 5.0
-      ..style = PaintingStyle.fill;
-
-    paint.color = valueColor;
-    indicatorPaint.color = valueColor;
-
-    void drawBar(double x, double width) {
-      if (width <= 0.0) return;
-
-      double left;
-      switch (textDirection) {
-        case TextDirection.rtl:
-          left = size.width - width - x;
-          break;
-        case TextDirection.ltr:
-          left = x;
-          break;
-      }
-      canvas.drawRect(Offset(left, 0.0) & Size(width, size.height), paint);
-    }
-
-    void drawIndicator(double x, double width) {
-      if (width <= 0.0) return;
-
-      double left;
-      switch (textDirection) {
-        case TextDirection.rtl:
-          left = size.width - width - x;
-          break;
-        case TextDirection.ltr:
-          left = x;
-          break;
-      }
-      canvas.drawCircle(Offset(width, 1.5), bubbleRadius, paint);
-    }
-
-    if (value != null) {
-      drawBar(0.0, value.clamp(0.0, 1.0) * size.width as double);
-      drawIndicator(0.0, value.clamp(0.0, 1.0) * size.width as double);
-    } else {
-      final double x1 = size.width * line1Tail.transform(animationValue);
-      final double width1 = size.width * line1Head.transform(animationValue) - x1;
-
-      final double x2 = size.width * line2Tail.transform(animationValue);
-      final double width2 = size.width * line2Head.transform(animationValue) - x2;
-
-      drawBar(x1, width1);
-      drawIndicator(x1, width1);
-      drawBar(x2, width2);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_LinearProgressIndicatorPainter oldPainter) {
-    return oldPainter.backgroundColor != backgroundColor ||
-        oldPainter.valueColor != valueColor ||
-        oldPainter.value != value ||
-        oldPainter.animationValue != animationValue ||
-        oldPainter.textDirection != textDirection;
   }
 }
