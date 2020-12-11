@@ -25,18 +25,18 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import javax.net.ssl.HttpsURLConnection;
 
-/** Android platform implementation of the VideoPlayerPlugin. */
-public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
-  private static final String TAG = "VideoPlayerPlugin";
+/** Android platform implementation of the ExtVideoPlayerPlugin. */
+public class ExtVideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
+  private static final String TAG = "ExtVideoPlayerPlugin";
   private final LongSparseArray<VideoPlayer> videoPlayers = new LongSparseArray<>();
   private FlutterState flutterState;
   private VideoPlayerOptions options = new VideoPlayerOptions();
 
   /** Register this with the v2 embedding for the plugin to respond to lifecycle callbacks. */
-  public VideoPlayerPlugin() {}
+  public ExtVideoPlayerPlugin() {}
 
   @SuppressWarnings("deprecation")
-  private VideoPlayerPlugin(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
+  private ExtVideoPlayerPlugin(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
     this.flutterState =
         new FlutterState(
             registrar.context(),
@@ -50,7 +50,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
   /** Registers this with the stable v1 embedding. Will not respond to lifecycle events. */
   @SuppressWarnings("deprecation")
   public static void registerWith(io.flutter.plugin.common.PluginRegistry.Registrar registrar) {
-    final VideoPlayerPlugin plugin = new VideoPlayerPlugin(registrar);
+    final ExtVideoPlayerPlugin plugin = new ExtVideoPlayerPlugin(registrar);
     registrar.addViewDestroyListener(
         view -> {
           plugin.onDestroy();
@@ -233,7 +233,7 @@ public class VideoPlayerPlugin implements FlutterPlugin, VideoPlayerApi {
       this.textureRegistry = textureRegistry;
     }
 
-    void startListening(VideoPlayerPlugin methodCallHandler, BinaryMessenger messenger) {
+    void startListening(ExtVideoPlayerPlugin methodCallHandler, BinaryMessenger messenger) {
       VideoPlayerApi.setup(messenger, methodCallHandler);
     }
 

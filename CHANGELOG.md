@@ -1,3 +1,8 @@
+## 0.0.4
+
+* iOS Example project fix
+* Android build failed some time
+
 ## 0.0.3
 
 * Youtube video no sound fixed
