@@ -1,0 +1,6 @@
+module ext_video_player {
+  umbrella header "ext_video_player-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "ext_video_player",
+  "version": "0.0.3",
+  "summary": "Flutter Video Player",
+  "description": "A Flutter plugin for playing back video on a Widget surface.\nDownloaded by pub (not CocoaPods).",
+  "homepage": "https://github.com/ponnamkarthik/ext_video_player",
+  "license": {
+    "type": "BSD",
+    "file": "../LICENSE"
+  },
+  "authors": {
+    "Karthik Ponnam": "ponnamkarthik3@gmail.com"
+  },
+  "source": {
+    "http": "https://github.com/ponnamkarthik/ext_video_player/tree/master/packages/video_player/video_player"
+  },
+  "documentation_url": "https://pub.dev/packages/ext_video_player",
+  "source_files": "Classes/**/*",
+  "public_header_files": "Classes/**/*.h",
+  "dependencies": {
+    "Flutter": [
+
+    ]
+  },
+  "platforms": {
+    "ios": "8.0"
+  },
+  "pod_target_xcconfig": {
+    "DEFINES_MODULE": "YES",
+    "VALID_ARCHS[sdk=iphonesimulator*]": "x86_64"
+  }
+}

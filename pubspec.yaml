@@ -11,7 +11,7 @@ flutter:
         package: ext.videoplayer
         pluginClass: VideoPlayerPlugin
       ios:
-        pluginClass: FLTVideoPlayerPlugin
+        pluginClass: FLTExtVideoPlayerPlugin
       web:
         default_package: video_player_web
 
@@ -38,5 +38,5 @@ dev_dependencies:
   pigeon: 0.1.7
 
 environment:
-  sdk: ">=2.8.0 <3.0.0"
+  sdk: '>=2.10.0 <3.0.0'
   flutter: ">=1.12.13+hotfix.5 <2.0.0"

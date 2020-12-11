@@ -2,18 +2,18 @@
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
 #
 Pod::Spec.new do |s|
-  s.name             = 'video_player'
+  s.name             = 'ext_video_player'
   s.version          = '0.0.3'
   s.summary          = 'Flutter Video Player'
   s.description      = <<-DESC
 A Flutter plugin for playing back video on a Widget surface.
 Downloaded by pub (not CocoaPods).
                        DESC
-  s.homepage         = 'https://github.com/flutter/plugins'
+  s.homepage         = 'https://github.com/ponnamkarthik/ext_video_player'
   s.license          = { :type => 'BSD', :file => '../LICENSE' }
-  s.author           = { 'Flutter Dev Team' => 'flutter-dev@googlegroups.com' }
-  s.source           = { :http => 'https://github.com/flutter/plugins/tree/master/packages/video_player/video_player' }
-  s.documentation_url = 'https://pub.dev/packages/video_player'
+  s.author           = { 'Karthik Ponnam' => 'ponnamkarthik3@gmail.com' }
+  s.source           = { :http => 'https://github.com/ponnamkarthik/ext_video_player/tree/master/packages/video_player/video_player' }
+  s.documentation_url = 'https://pub.dev/packages/ext_video_player'
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
