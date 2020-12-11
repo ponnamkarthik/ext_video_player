@@ -4,23 +4,23 @@
 
 #import "GeneratedPluginRegistrant.h"
 
-#if __has_include(<ext_video_player/FLTVideoPlayerPlugin.h>)
-#import <ext_video_player/FLTVideoPlayerPlugin.h>
-#else
-@import ext_video_player;
-#endif
-
 #if __has_include(<e2e/E2EPlugin.h>)
 #import <e2e/E2EPlugin.h>
 #else
 @import e2e;
 #endif
 
+#if __has_include(<ext_video_player/FLTtVideoPlayerPlugin.h>)
+#import <ext_video_player/FLTtVideoPlayerPlugin.h>
+#else
+@import ext_video_player;
+#endif
+
 @implementation GeneratedPluginRegistrant
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
-  [FLTVideoPlayerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTVideoPlayerPlugin"]];
   [E2EPlugin registerWithRegistrar:[registry registrarForPlugin:@"E2EPlugin"]];
+  [FLTtVideoPlayerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTtVideoPlayerPlugin"]];
 }
 
 @end

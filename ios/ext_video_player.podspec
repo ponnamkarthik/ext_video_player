@@ -2,8 +2,8 @@
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html
 #
 Pod::Spec.new do |s|
-  s.name             = 'ext_video_player'
-  s.version          = '0.0.1'
+  s.name             = 'video_player'
+  s.version          = '0.0.3'
   s.summary          = 'Flutter Video Player'
   s.description      = <<-DESC
 A Flutter plugin for playing back video on a Widget surface.
