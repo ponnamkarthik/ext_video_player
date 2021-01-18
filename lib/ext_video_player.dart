@@ -288,12 +288,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         String newUrl = videoUrls[quality.toString().split('.').last];
 
         if (newUrl == null) {
-          for (int i = quality.index + 1; i < VideoYoutubeQuality.values.length; i++) {
+          for (int i = quality.index + 1; i < VideoYoutubeQuality.values.length && newUrl == null; i++) {
             newUrl = videoUrls[VideoYoutubeQuality.values[i].toString().split('.').last];
           }
         }
         if (newUrl == null) {
-          for (int i = quality.index - 1; i >= 0; i--) {
+          for (int i = quality.index - 1 && newUrl == null; i >= 0; i--) {
             newUrl = videoUrls[VideoYoutubeQuality.values[i].toString().split('.').last];
           }
         }
