@@ -10,6 +10,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:ext_video_player/ext_video_player.dart';
+import 'package:youtube_explode_dart/src/videos/streams/video_quality.dart';
 
 void main() {
   runApp(
@@ -95,10 +96,13 @@ class _ButterFlyAssetVideoInList extends StatelessWidget {
                 leading: Icon(Icons.cake),
                 title: Text("Video video"),
               ),
-              Stack(alignment: FractionalOffset.bottomRight + const FractionalOffset(-0.1, -0.1), children: <Widget>[
-                _ButterFlyAssetVideo(),
-                Image.asset('assets/flutter-mark-square-64.png'),
-              ]),
+              Stack(
+                  alignment: FractionalOffset.bottomRight +
+                      const FractionalOffset(-0.1, -0.1),
+                  children: <Widget>[
+                    _ButterFlyAssetVideo(),
+                    Image.asset('assets/flutter-mark-square-64.png'),
+                  ]),
             ],
           ),
         ])),
@@ -215,7 +219,8 @@ class _BumbleBeeRemoteVideoState extends State<_BumbleBeeRemoteVideo> {
   VideoPlayerController _controller;
 
   Future<ClosedCaptionFile> _loadCaptions() async {
-    final String fileContents = await DefaultAssetBundle.of(context).loadString('assets/bumble_bee_captions.srt');
+    final String fileContents = await DefaultAssetBundle.of(context)
+        .loadString('assets/bumble_bee_captions.srt');
     return SubRipCaptionFile(fileContents);
   }
 
@@ -281,6 +286,7 @@ class _YoutubeVideoState extends State<_YoutubeVideo> {
     super.initState();
     _controller = VideoPlayerController.network(
       'https://www.youtube.com/watch?v=YFCSODyFxbE',
+      youtubeVideoQuality: VideoQuality.high720,
     );
 
     _controller.addListener(() {
@@ -431,7 +437,8 @@ class _PlayerVideoAndPopPageState extends State<_PlayerVideoAndPopPage> {
   void initState() {
     super.initState();
 
-    _videoPlayerController = VideoPlayerController.asset('assets/Butterfly-209.mp4');
+    _videoPlayerController =
+        VideoPlayerController.asset('assets/Butterfly-209.mp4');
     _videoPlayerController.addListener(() {
       if (startedPlaying && !_videoPlayerController.value.isPlaying) {
         Navigator.pop(context);

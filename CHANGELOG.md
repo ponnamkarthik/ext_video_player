@@ -1,3 +1,11 @@
+## 0.0.6
+
+* Added option for `youtubeVideoQuality` in `VideoPlayerController.network` default will be 360p
+
+## 0.0.5
+
+* getting youtube url from youtube_explode_dart
+
 ## 0.0.4
 
 * iOS Example project fix
