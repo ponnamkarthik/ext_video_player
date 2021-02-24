@@ -12,22 +12,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:meta/meta.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 export 'package:video_player_platform_interface/video_player_platform_interface.dart'
     show DurationRange, DataSourceType, VideoFormat, VideoPlayerOptions;
 
 import 'src/closed_caption_file.dart';
 export 'src/closed_caption_file.dart';
-
-/// The Qauality of video
-enum VideoYoutubeQuality {
-  hd1080, // 1080p
-  hd720, // 720p
-  large, // 480p
-  medium, // 360p
-  small, // 240p
-  tiny, // 144p
-}
 
 final VideoPlayerPlatform _videoPlayerPlatform = VideoPlayerPlatform.instance
   // This will clear all open videos on the platform when a full restart is
@@ -262,7 +253,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     _lifeCycleObserver.initialize();
     _creatingCompleter = Completer<void>();
 
-    VideoYoutubeQuality quality = VideoYoutubeQuality.medium;
+    VideoQuality quality = VideoQuality.medium360;
 
     String finalYoutubeUrl = dataSource;
     if (_getIdFromUrl(dataSource) != null) {
@@ -270,34 +261,23 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         Map<String, String> videoUrls = Map();
         String _videoId = _getIdFromUrl(dataSource);
         String _fetchUrl = "";
-        if (kIsWeb) {
-          _fetchUrl = "https://youtubevideodownloadurls.netlify.app/.netlify/functions/server?vid=$_videoId";
-        } else {
-          _fetchUrl = "https://www.youtube.com/get_video_info?&video_id=$_videoId";
-        }
-        var response = await http.get(_fetchUrl);
 
-        Uri uri = Uri.parse('http://google.com?' + response.body);
-        var jsonRes = jsonDecode(uri.queryParameters['player_response']);
-        var formats = jsonRes['streamingData']['formats'];
-        formats.forEach((format) {
-          if (videoUrls[format['quality']] == null) {
-            videoUrls[format['quality']] = format['url'];
+        var yt = YoutubeExplode();
+
+        var manifest = await yt.videos.streamsClient.getManifest(_videoId);
+
+        Uri videoUri;
+        manifest.muxed.forEach((m) {
+          if (quality == m.videoQuality) {
+            videoUri = m.url;
           }
         });
-        String newUrl = videoUrls[quality.toString().split('.').last];
 
-        if (newUrl == null) {
-          for (int i = quality.index + 1; i < VideoYoutubeQuality.values.length; i++) {
-            newUrl = videoUrls[VideoYoutubeQuality.values[i].toString().split('.').last];
-          }
+        if (videoUri == null) {
+          finalYoutubeUrl = manifest.muxed.first.url.toString();
+        } else {
+          finalYoutubeUrl = videoUri.toString();
         }
-        if (newUrl == null) {
-          for (int i = quality.index - 1; i >= 0; i--) {
-            newUrl = videoUrls[VideoYoutubeQuality.values[i].toString().split('.').last];
-          }
-        }
-        if (newUrl != null) finalYoutubeUrl = newUrl;
       } catch (err) {}
     }
 
@@ -393,8 +373,10 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   /// To Get VideoId from Url
   static String _getIdFromUrl(String url, [bool trimWhitespaces = true]) {
     List<RegExp> _regexps = [
-      RegExp(r'^https:\/\/(?:www\.|m\.)?youtube\.com\/watch\?v=([_\-a-zA-Z0-9]{11}).*$'),
-      RegExp(r'^https:\/\/(?:www\.|m\.)?youtube(?:-nocookie)?\.com\/embed\/([_\-a-zA-Z0-9]{11}).*$'),
+      RegExp(
+          r'^https:\/\/(?:www\.|m\.)?youtube\.com\/watch\?v=([_\-a-zA-Z0-9]{11}).*$'),
+      RegExp(
+          r'^https:\/\/(?:www\.|m\.)?youtube(?:-nocookie)?\.com\/embed\/([_\-a-zA-Z0-9]{11}).*$'),
       RegExp(r'^https:\/\/youtu\.be\/([_\-a-zA-Z0-9]{11}).*$')
     ];
 
