@@ -1,3 +1,6 @@
+## 0.1.0
+
+* Nullsafety
 ## 0.0.6
 
 * Added option for `youtubeVideoQuality` in `VideoPlayerController.network` default will be 360p
