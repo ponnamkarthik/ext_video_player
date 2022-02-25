@@ -279,11 +279,15 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
             videoUri = m.url;
           }
         });
-
-        if (videoUri == null) {
-          finalYoutubeUrl = manifest.muxed.first.url.toString();
-        } else {
-          finalYoutubeUrl = videoUri.toString();
+        if (newUrl == null) {
+          for (int i = quality.index + 1; i < VideoYoutubeQuality.values.length && newUrl == null; i++) {
+            newUrl = videoUrls[VideoYoutubeQuality.values[i].toString().split('.').last];
+          }
+        }
+        if (newUrl == null) {
+          for (int i = quality.index - 1 && newUrl == null; i >= 0; i--) {
+            newUrl = videoUrls[VideoYoutubeQuality.values[i].toString().split('.').last];
+          }
         }
       } catch (err) {}
     }
