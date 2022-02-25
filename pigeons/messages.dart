@@ -1,29 +1,31 @@
+import 'package:pigeon/java_generator.dart';
+import 'package:pigeon/objc_generator.dart';
 import 'package:pigeon/pigeon_lib.dart';
 
 class TextureMessage {
-  int textureId;
+  int? textureId;
 }
 
 class LoopingMessage {
-  int textureId;
-  bool isLooping;
+  int? textureId;
+  bool? isLooping;
 }
 
 class VolumeMessage {
-  int textureId;
-  double volume;
+  int? textureId;
+  double? volume;
 }
 
 class PositionMessage {
-  int textureId;
-  int position;
+  int? textureId;
+  int? position;
 }
 
 class CreateMessage {
-  String asset;
-  String uri;
-  String packageName;
-  String formatHint;
+  String? asset;
+  String? uri;
+  String? packageName;
+  String? formatHint;
 }
 
 @HostApi()
@@ -40,11 +42,25 @@ abstract class VideoPlayerApi {
 }
 
 void configurePigeon(PigeonOptions opts) {
-  opts.dartOut = '../video_player_platform_interface/lib/messages.dart';
-  opts.objcHeaderOut = 'ios/Classes/messages.h';
-  opts.objcSourceOut = 'ios/Classes/messages.m';
-  opts.objcOptions.prefix = 'FLT';
-  opts.javaOut =
-      'android/src/main/java/io/flutter/plugins/videoplayer/Messages.java';
-  opts.javaOptions.package = 'ext.videoplayer';
+  opts = PigeonOptions(
+    dartOut: '../video_player_platform_interface/lib/messages.dart',
+    objcHeaderOut: 'ios/Classes/messages.h',
+    objcSourceOut: 'ios/Classes/messages.m',
+    copyrightHeader: opts.copyrightHeader,
+    dartOptions: opts.dartOptions,
+    dartTestOut: opts.dartTestOut,
+    input: opts.input,
+    objcOptions: ObjcOptions(
+      prefix: 'FLT',
+      copyrightHeader: opts.objcOptions!.copyrightHeader,
+      header: opts.objcOptions!.header,
+    ),
+    javaOut:
+        'android/src/main/java/io/flutter/plugins/videoplayer/Messages.java',
+    javaOptions: JavaOptions(
+      className: opts.javaOptions!.className,
+      copyrightHeader: opts.javaOptions!.copyrightHeader,
+      package: 'ext.videoplayer',
+    ),
+  );
 }

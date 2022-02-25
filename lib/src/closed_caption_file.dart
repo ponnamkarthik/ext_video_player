@@ -34,15 +34,15 @@ class Caption {
   const Caption({this.number, this.start, this.end, this.text});
 
   /// The number that this caption was assigned.
-  final int number;
+  final int? number;
 
   /// When in the given video should this [Caption] begin displaying.
-  final Duration start;
+  final Duration? start;
 
   /// When in the given video should this [Caption] be dismissed.
-  final Duration end;
+  final Duration? end;
 
   /// The actual text that should appear on screen to be read between [start]
   /// and [end].
-  final String text;
+  final String? text;
 }
