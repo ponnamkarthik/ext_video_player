@@ -1,6 +1,7 @@
-## 0.1.1
+## 0.1.2
 
 * PR Merge reverted
+* Packages Updated
 ## 0.1.0
 
 * Nullsafety
