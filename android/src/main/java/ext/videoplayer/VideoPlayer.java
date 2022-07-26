@@ -8,13 +8,12 @@ import android.net.Uri;
 import android.os.Build;
 import android.view.Surface;
 import com.google.android.exoplayer2.C;
-import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
+import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.Player.EventListener;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.audio.AudioAttributes;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
@@ -24,9 +23,8 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
 import com.google.android.exoplayer2.upstream.DataSource;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 import io.flutter.plugin.common.EventChannel;
 import io.flutter.view.TextureRegistry;
@@ -42,7 +40,7 @@ final class VideoPlayer {
   private static final String FORMAT_HLS = "hls";
   private static final String FORMAT_OTHER = "other";
 
-  private SimpleExoPlayer exoPlayer;
+  private ExoPlayer exoPlayer;
 
   private Surface surface;
 
@@ -67,21 +65,15 @@ final class VideoPlayer {
     this.textureEntry = textureEntry;
     this.options = options;
 
-    exoPlayer = new SimpleExoPlayer.Builder(context).build();
+    exoPlayer = new ExoPlayer.Builder(context).build();
 
     Uri uri = Uri.parse(dataSource);
 
     DataSource.Factory dataSourceFactory;
     if (isHTTP(uri)) {
-      dataSourceFactory =
-              new DefaultHttpDataSourceFactory(
-                      "ExoPlayer",
-                      null,
-                      DefaultHttpDataSource.DEFAULT_CONNECT_TIMEOUT_MILLIS,
-                      DefaultHttpDataSource.DEFAULT_READ_TIMEOUT_MILLIS,
-                      true);
+      dataSourceFactory = new DefaultHttpDataSource.Factory();
     } else {
-      dataSourceFactory = new DefaultDataSourceFactory(context, "ExoPlayer");
+      dataSourceFactory = new DefaultDataSource.Factory(context);
     }
 
     MediaSource mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint, context);
@@ -127,12 +119,12 @@ final class VideoPlayer {
       case C.TYPE_SS:
         return new SsMediaSource.Factory(
                 new DefaultSsChunkSource.Factory(mediaDataSourceFactory),
-                new DefaultDataSourceFactory(context, null, mediaDataSourceFactory))
+                new DefaultDataSource.Factory(context, mediaDataSourceFactory))
                 .createMediaSource(MediaItem.fromUri(uri));
       case C.TYPE_DASH:
         return new DashMediaSource.Factory(
                 new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
-                new DefaultDataSourceFactory(context, null, mediaDataSourceFactory))
+                new DefaultDataSource.Factory(context, mediaDataSourceFactory))
                 .createMediaSource(MediaItem.fromUri(uri));
       case C.TYPE_HLS:
         return new HlsMediaSource.Factory(mediaDataSourceFactory)
@@ -168,7 +160,7 @@ final class VideoPlayer {
     setAudioAttributes(exoPlayer, options.mixWithOthers);
 
     exoPlayer.addListener(
-            new EventListener() {
+            new Player.Listener() {
 
               @Override
               public void onPlaybackStateChanged(final int playbackState) {
@@ -187,7 +179,7 @@ final class VideoPlayer {
               }
 
               @Override
-              public void onPlayerError(final ExoPlaybackException error) {
+              public void onPlayerError(final PlaybackException error) {
                 if (eventSink != null) {
                   eventSink.error("VideoError", "Video player had error " + error, null);
                 }
@@ -204,13 +196,13 @@ final class VideoPlayer {
     eventSink.success(event);
   }
 
-  @SuppressWarnings("deprecation")
-  private static void setAudioAttributes(SimpleExoPlayer exoPlayer, boolean isMixMode) {
+  private static void setAudioAttributes(ExoPlayer exoPlayer, boolean isMixMode) {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
       exoPlayer.setAudioAttributes(
               new AudioAttributes.Builder().setContentType(C.CONTENT_TYPE_MOVIE).build(), !isMixMode);
     } else {
-      exoPlayer.setAudioStreamType(C.STREAM_TYPE_MUSIC);
+      exoPlayer.setAudioAttributes(
+              new AudioAttributes.Builder().setContentType(C.CONTENT_TYPE_MUSIC).build(), !isMixMode);
     }
   }
 
