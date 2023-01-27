@@ -17,20 +17,20 @@ flutter:
 
 dependencies:
   meta: "^1.0.5"
-  video_player_platform_interface: ^4.1.0
+  video_player_platform_interface: ^6.0.1
 
   # The design on https://flutter.dev/go/federated-plugins was to leave
   # this constraint as "any". We cannot do it right now as it fails pub publish
   # validation, so we set a ^ constraint.
   # TODO(amirh): Revisit this (either update this part in the  design or the pub tool).
   # https://github.com/flutter/flutter/issues/46264
-  video_player_web: ^2.0.2
+  video_player_web: ^2.0.13
   
   flutter:
     sdk: flutter
   
   http: ^0.13.4
-  youtube_explode_dart: ^1.10.10
+  youtube_explode_dart: ^1.12.3
 
 dev_dependencies:
   flutter_test:

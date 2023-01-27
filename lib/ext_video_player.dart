@@ -3,14 +3,10 @@
 // found in the LICENSE file.
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:http/http.dart' as http;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:meta/meta.dart';
 import 'package:video_player_platform_interface/video_player_platform_interface.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
@@ -265,9 +261,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
     String finalYoutubeUrl = dataSource;
     if (_getIdFromUrl(dataSource) != null) {
       try {
-        Map<String, String> videoUrls = Map();
         String? _videoId = _getIdFromUrl(dataSource);
-        String _fetchUrl = "";
 
         var yt = YoutubeExplode();
 
@@ -304,6 +298,12 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
         );
         break;
       case DataSourceType.file:
+        dataSourceDescription = DataSource(
+          sourceType: DataSourceType.file,
+          uri: dataSource,
+        );
+        break;
+      case DataSourceType.contentUri:
         dataSourceDescription = DataSource(
           sourceType: DataSourceType.file,
           uri: dataSource,
@@ -377,7 +377,7 @@ class VideoPlayerController extends ValueNotifier<VideoPlayerValue> {
   }
 
   /// To Get VideoId from Url
-  static String? _getIdFromUrl(String url, [bool trimWhitespaces = true]) {
+  static String? _getIdFromUrl(String? url, [bool trimWhitespaces = true]) {
     List<RegExp> _regexps = [
       RegExp(
           r'^https:\/\/(?:www\.|m\.)?youtube\.com\/watch\?v=([_\-a-zA-Z0-9]{11}).*$'),
@@ -610,7 +610,7 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
   final VideoPlayerController _controller;
 
   void initialize() {
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -630,7 +630,7 @@ class _VideoAppLifeCycleObserver extends Object with WidgetsBindingObserver {
   }
 
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
   }
 }
 
